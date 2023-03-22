@@ -1,0 +1,49 @@
+# More info on config here: https://github.com/golangci/golangci-lint#config-file
+run:
+  deadline: 5m
+  issues-exit-code: 1
+  tests: true
+  skip-dirs-use-default: true
+
+output:
+  format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+
+linters-settings:
+  govet:
+    check-shadowing: true
+  golint:
+    min-confidence: 0
+  dupl:
+    threshold: 100
+  goconst:
+    min-len:         2
+    min-occurrences: 2
+
+linters:
+  disable-all: true
+  enable:
+    - unused
+    - stylecheck
+    - gosimple
+    - govet
+    - errcheck
+    - ineffassign
+    - typecheck
+    - depguard
+    - dupl
+    - goconst
+    - goimports
+    - megacheck
+    - gosec
+    - gocritic
+    - staticcheck
+
+issues:
+  exclude-use-default: false
+  exclude:
+    - ST1003
+    - ST1000
+    - don't use an underscore in package name
+    - declaration of "(err|ctx)" shadows declaration at
