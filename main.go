@@ -1,3 +1,5 @@
+//go:generate mockgen -source=main.go -destination=mocks.go -package=$GOPACKAGE
+
 package main
 
 import (
@@ -79,8 +81,8 @@ func main() {
 
 	log.Println("data was read from input file", input)
 
-	defer log.Println("processed queries:", countRows)
-	defer log.Println("unique queries:", len(searchFreq))
+	log.Println("processed queries:", countRows)
+	log.Println("unique queries:", len(searchFreq))
 
 	uniqSearches := sortUniqSearches(searchFreq)
 
@@ -125,7 +127,8 @@ func countSearchQueriesFreq(scanner TextScanner, memoryLimit int) (int, map[stri
 
 	var query string
 	var rows int
-	for scanner.Scan() && (len(frequency) < memoryLimit || memoryLimit == withoutMemoryLimit) {
+	for (len(frequency) < memoryLimit || memoryLimit == withoutMemoryLimit) &&
+		scanner.Scan() {
 		query = strings.TrimSpace(scanner.Text())
 
 		rows++
