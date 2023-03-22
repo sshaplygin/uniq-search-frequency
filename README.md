@@ -18,7 +18,7 @@ CLI support next flags:
 - n - memory limit for first uniques search queries. `default value = -1`
 - input - input filepath `default = input.txt`
 - output - output filepath `default = output.tsv`
-- h - print help about supported cli flags
+- h - print helps about supported cli flags
 
 Example:
 
