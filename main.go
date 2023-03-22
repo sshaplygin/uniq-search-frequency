@@ -21,7 +21,7 @@ const withoutMemoryLimit = -1
 
 var (
 	outputFlag = flag.String("output", "output.tsv", "Set output filename. Default value: output.tsv Example: --output=output.tsv")
-	inputFlag  = flag.String("input", "input.txt", "Set input filename. Defaul value is empty string. Example: --input=inuput.txt")
+	inputFlag  = flag.String("input", "input.txt", "Set input filename. Defaul value: input.txt Example: --input=inuput.txt")
 	nFlag      = flag.Int("n", withoutMemoryLimit, "Set memory limit for first uniques search queries. Defaul value: -1 - without limit. Example: --n=3")
 )
 
