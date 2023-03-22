@@ -15,9 +15,10 @@ Step 2. Run cli `./bin/cli`
 
 CLI support next flags:
 
-- n - `default value = -1`
-- input - `default = input.txt`
-- output - `default = output.tsv`
+- n - memory limit for first uniques search queries. `default value = -1`
+- input - input filepath `default = input.txt`
+- output - output filepath `default = output.tsv`
+- h - print help about supported cli flags
 
 Example:
 
