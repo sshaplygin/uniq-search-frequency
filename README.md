@@ -25,3 +25,10 @@ Example:
 ```bash
     cli --n=3 --input=test.txt --output=test1.tsv
 ```
+
+## Links
+
+Read more:
+
+- External sort [link](https://www.geeksforgeeks.org/external-sorting/)
+- Merge sort [link](https://www.geeksforgeeks.org/merge-k-sorted-arrays/)
