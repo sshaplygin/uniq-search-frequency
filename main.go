@@ -79,6 +79,12 @@ func main() {
 
 	countRows, searchFreq := countSearchQueriesFreq(scanner, n)
 
+	if scanner.Err() != nil {
+		log.Println("scanner after read", err)
+
+		return
+	}
+
 	log.Println("data was read from input file", input)
 
 	log.Println("processed queries:", countRows)
@@ -150,8 +156,6 @@ func sortUniqSearches(frequency map[string]*freq) []search {
 
 	searches := make([]search, 0, len(frequency))
 	for query, count := range frequency {
-		count := count
-
 		searches = append(searches, search{query, count})
 	}
 
