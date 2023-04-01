@@ -4,7 +4,7 @@ This is the CLI for `task.txt`. The test task is written in the format .txt in R
 
 ## Usage
 
-Step 1. Without build binary file: `go run main.go`
+Step 1. Without build binary file: `go run ./`
 
 or
 
