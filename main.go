@@ -52,5 +52,5 @@ func main() {
 		return
 	}
 
-	log.Println("data was written to output file", outputFile)
+	log.Println("data was written to output file:", outputFile)
 }
