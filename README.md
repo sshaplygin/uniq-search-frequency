@@ -32,3 +32,4 @@ Read more:
 
 - External sort [link](https://www.geeksforgeeks.org/external-sorting/)
 - Merge sort [link](https://www.geeksforgeeks.org/merge-k-sorted-arrays/)
+- Impelemntation extenal sort in Go [link](https://rosettacode.org/wiki/External_sort#Go)
