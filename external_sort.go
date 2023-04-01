@@ -42,7 +42,7 @@ func externalSort(inputFile, outputFile string, memLimit int) error {
 }
 
 func countUniqueSearhes(tmpDir string, inputFile string, batch, memLimit int) error {
-	input, err := os.Open(inputFile)
+	input, err := os.Open(filepath.Clean(inputFile))
 	if err != nil {
 		return fmt.Errorf("open input file: %w", err)
 	}
@@ -81,7 +81,7 @@ func countUniqueSearhes(tmpDir string, inputFile string, batch, memLimit int) er
 
 		if batchIn == nil {
 			batchInName = fmt.Sprintf(inputBacthFileTemplate, inputBatchPrefix, batch)
-			batchIn, err = os.Create(filepath.Join(tmpDir, batchInName))
+			batchIn, err = os.Create(filepath.Clean(filepath.Join(tmpDir, batchInName)))
 			if err != nil {
 				return fmt.Errorf(`create input batch "%s" file: %w`, batchInName, err)
 			}
@@ -102,7 +102,7 @@ func countUniqueSearhes(tmpDir string, inputFile string, batch, memLimit int) er
 	}
 
 	batchFilename := fmt.Sprintf(outputBatchFileTemplate, outputBatchPrefix, batch)
-	batchOut, err := os.Create(filepath.Join(tmpDir, batchFilename))
+	batchOut, err := os.Create(filepath.Clean(filepath.Join(tmpDir, batchFilename)))
 	if err != nil {
 		return fmt.Errorf(`create output batch "%s" file: %w`, batchFilename, err)
 	}
@@ -135,7 +135,7 @@ func mergeFiles(tmpDir string, outputFile string, n int) error {
 
 	batchFiles := make([]*os.File, len(chunkFiles))
 	for i := 0; i < len(batchFiles); i++ {
-		batchFiles[i], err = os.Open(chunkFiles[i])
+		batchFiles[i], err = os.Open(filepath.Clean(chunkFiles[i]))
 		if err != nil {
 			return fmt.Errorf(`open batch "%s" file: %w`, chunkFiles[i], err)
 		}

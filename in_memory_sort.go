@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
 func inMemorySort(inputFile, outputFile string, _ int) error {
-	file, err := os.Open(inputFile)
+	file, err := os.Open(filepath.Clean(inputFile))
 	if err != nil {
 		return fmt.Errorf("open input file: %w", err)
 	}
@@ -33,7 +34,7 @@ func inMemorySort(inputFile, outputFile string, _ int) error {
 
 	uniqSearches := sortUniqSearches(searchFreq)
 
-	f, err := os.Create(outputFile)
+	f, err := os.Create(filepath.Clean(outputFile))
 	if err != nil {
 		return fmt.Errorf("create output file: %w", err)
 	}
