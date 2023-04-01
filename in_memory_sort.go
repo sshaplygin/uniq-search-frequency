@@ -25,7 +25,7 @@ func inMemorySort(inputFile, outputFile string, _ int) error {
 	countRows, searchFreq := countSearchQueriesFreq(scanner)
 
 	if scanner.Err() != nil {
-		return fmt.Errorf("scanner after read: %w", err)
+		return fmt.Errorf("scanner after read from input file: %w", err)
 	}
 
 	log.Println("processed queries:", countRows)

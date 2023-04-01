@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,10 +17,12 @@ const outputBatchPrefix = "output"
 const outputBatchFileTemplate = "%s-%d.tsv"
 const inputBacthFileTemplate = "%s-%d.txt"
 
+var outBatchPattern = fmt.Sprintf("%s-*.tsv", outputBatchPrefix)
+
 func externalSort(inputFile, outputFile string, memLimit int) error {
 	dir, err := os.MkdirTemp(os.TempDir(), tempDir)
 	if err != nil {
-		return err
+		return fmt.Errorf("create tmp dir: %w", err)
 	}
 
 	defer func() {
@@ -29,19 +30,21 @@ func externalSort(inputFile, outputFile string, memLimit int) error {
 		logUnhandledErr(err)
 	}()
 
-	fmt.Println(dir)
-
 	if err = countUniqueSearhes(dir, inputFile, 0, memLimit); err != nil {
-		return err
+		return fmt.Errorf("count unique searches: %w", err)
 	}
 
-	return mergeFiles(dir, outputFile, memLimit)
+	if err = mergeFiles(dir, outputFile, memLimit); err != nil {
+		return fmt.Errorf("merge unique searches to output file: %w", err)
+	}
+
+	return nil
 }
 
 func countUniqueSearhes(tmpDir string, inputFile string, batch, memLimit int) error {
 	input, err := os.Open(inputFile)
 	if err != nil {
-		return err
+		return fmt.Errorf("open input file: %w", err)
 	}
 
 	defer func() {
@@ -80,7 +83,7 @@ func countUniqueSearhes(tmpDir string, inputFile string, batch, memLimit int) er
 			batchInName = fmt.Sprintf(inputBacthFileTemplate, inputBatchPrefix, batch)
 			batchIn, err = os.Create(filepath.Join(tmpDir, batchInName))
 			if err != nil {
-				return err
+				return fmt.Errorf(`create input batch "%s" file: %w`, batchInName, err)
 			}
 
 			defer func() {
@@ -90,17 +93,18 @@ func countUniqueSearhes(tmpDir string, inputFile string, batch, memLimit int) er
 		}
 
 		if _, err = batchIn.Write(append([]byte(query), '\n')); err != nil {
-			return err
+			return fmt.Errorf(`write to "%s" batch: %w`, batchInName, err)
 		}
 	}
 
 	if scanner.Err() != nil {
-		return err
+		return fmt.Errorf("scanner after read from input file: %w", err)
 	}
 
-	batchOut, err := os.Create(filepath.Join(tmpDir, fmt.Sprintf(outputBatchFileTemplate, outputBatchPrefix, batch)))
+	batchFilename := fmt.Sprintf(outputBatchFileTemplate, outputBatchPrefix, batch)
+	batchOut, err := os.Create(filepath.Join(tmpDir, batchFilename))
 	if err != nil {
-		return err
+		return fmt.Errorf(`create output batch "%s" file: %w`, batchFilename, err)
 	}
 
 	defer func() {
@@ -112,7 +116,7 @@ func countUniqueSearhes(tmpDir string, inputFile string, batch, memLimit int) er
 	for _, search := range searches {
 		_, err = batchOut.WriteString(fmt.Sprintf("%s\t%d\n", search.query, search.freq.count))
 		if err != nil {
-			return err
+			return fmt.Errorf(`create output batch "%s" file: %w`, batchFilename, err)
 		}
 	}
 
@@ -124,20 +128,16 @@ func countUniqueSearhes(tmpDir string, inputFile string, batch, memLimit int) er
 }
 
 func mergeFiles(tmpDir string, outputFile string, n int) error {
-	chunkFiles, err := filepath.Glob(filepath.Join(tmpDir, fmt.Sprintf("%s-*.tsv", outputBatchPrefix)))
+	chunkFiles, err := filepath.Glob(filepath.Join(tmpDir, outBatchPattern))
 	if err != nil {
-		return err
+		return fmt.Errorf(`get output batch files by pattern "%s": %w`, outBatchPattern, err)
 	}
 
-	k := len(chunkFiles)
-
-	log.Println(chunkFiles)
-
-	batchFiles := make([]*os.File, k)
-	for i := 0; i < k; i++ {
+	batchFiles := make([]*os.File, len(chunkFiles))
+	for i := 0; i < len(batchFiles); i++ {
 		batchFiles[i], err = os.Open(chunkFiles[i])
 		if err != nil {
-			return err
+			return fmt.Errorf(`open batch "%s" file: %w`, chunkFiles[i], err)
 		}
 
 		defer func(i int) {
@@ -148,7 +148,7 @@ func mergeFiles(tmpDir string, outputFile string, n int) error {
 
 	out, err := os.Create(filepath.Clean(outputFile))
 	if err != nil {
-		return err
+		return fmt.Errorf("create output file: %w", err)
 	}
 	defer func() {
 		err = out.Close()
@@ -159,7 +159,7 @@ func mergeFiles(tmpDir string, outputFile string, n int) error {
 	heap.Init(&pq)
 
 	var item *Item
-	for i := 0; i < k; i++ {
+	for i := 0; i < len(batchFiles); i++ {
 		item = &Item{}
 
 		_, err = fmt.Fscanf(batchFiles[i], outputTemplate, &item.value, &item.priority)
@@ -167,7 +167,7 @@ func mergeFiles(tmpDir string, outputFile string, n int) error {
 			continue
 		}
 		if err != nil {
-			return err
+			return fmt.Errorf(`read row from batch "%s" search: %w`, chunkFiles[item.batchIndex], err)
 		}
 
 		item.batchIndex = i
@@ -185,7 +185,7 @@ func mergeFiles(tmpDir string, outputFile string, n int) error {
 		_, err = fmt.Fscanf(batchFiles[item.batchIndex], outputTemplate, &item.value, &item.priority)
 		if err != nil {
 			if !errors.Is(err, io.EOF) {
-				return err
+				return fmt.Errorf(`read row from batch "%s" file: %w`, chunkFiles[item.batchIndex], err)
 			}
 
 			continue
