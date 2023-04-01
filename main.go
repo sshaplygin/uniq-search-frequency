@@ -15,7 +15,7 @@ const withoutMemoryLimit = -1
 var (
 	inputFlag  = flag.String("input", "input.txt", "Set input filename. Defaul value: input.txt Example: --input=inuput.txt")
 	outputFlag = flag.String("output", "output.tsv", "Set output filename. Default value: output.tsv Example: --output=output.tsv")
-	nFlag      = flag.Int("n", withoutMemoryLimit, "Set memory limit for first uniques search queries. Defaul value: -1 - without limit. Example: --n=3")
+	nFlag      = flag.Int("n", withoutMemoryLimit, "Set memory limit for uniques search queries. Defaul value: -1 - without limit. Example: --n=3")
 )
 
 func main() {
@@ -32,7 +32,7 @@ func main() {
 
 	n := pointer.GetInt(nFlag)
 	if n == 0 || n < withoutMemoryLimit {
-		log.Println("input unique search limit is zero")
+		log.Println("input unique search limit is unsupported")
 
 		return
 	}
