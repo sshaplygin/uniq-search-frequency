@@ -15,7 +15,8 @@ import (
 const tempDir = "tmp"
 const inputBatchPrefix = "input"
 const outputBatchPrefix = "output"
-const outputTemplate = "%s\t%d"
+const outputBatchFileTemplate = "%s-%d.tsv"
+const inputBacthFileTemplate = "%s-%d.txt"
 
 func externalSort(inputFile, outputFile string, memLimit int) error {
 	dir, err := os.MkdirTemp(os.TempDir(), tempDir)
@@ -25,14 +26,101 @@ func externalSort(inputFile, outputFile string, memLimit int) error {
 
 	defer func() {
 		err = os.RemoveAll(dir)
-		checkErr(err)
+		logUnhandledErr(err)
 	}()
 
-	if err = createInitialRuns(dir, inputFile, 0, memLimit); err != nil {
+	fmt.Println(dir)
+
+	if err = countUniqueSearhes(dir, inputFile, 0, memLimit); err != nil {
 		return err
 	}
 
 	return mergeFiles(dir, outputFile, memLimit)
+}
+
+func countUniqueSearhes(tmpDir string, inputFile string, batch, memLimit int) error {
+	input, err := os.Open(inputFile)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = input.Close()
+		logUnhandledErr(err)
+	}()
+
+	scanner := bufio.NewScanner(input)
+	scanner.Split(bufio.ScanLines)
+
+	var query string
+	var rows int
+
+	frequency := make(map[string]*freq, memLimit)
+	var batchIn *os.File
+	var batchInName string
+	for scanner.Scan() {
+		query = strings.TrimSpace(scanner.Text())
+
+		rows++
+
+		_, ok := frequency[query]
+		if !ok && len(frequency) < memLimit {
+			frequency[query] = &freq{1, rows}
+
+			continue
+		}
+
+		if ok {
+			frequency[query].count++
+
+			continue
+		}
+
+		if batchIn == nil {
+			batchInName = fmt.Sprintf(inputBacthFileTemplate, inputBatchPrefix, batch)
+			batchIn, err = os.Create(filepath.Join(tmpDir, batchInName))
+			if err != nil {
+				return err
+			}
+
+			defer func() {
+				err = batchIn.Close()
+				logUnhandledErr(err)
+			}()
+		}
+
+		if _, err = batchIn.Write(append([]byte(query), '\n')); err != nil {
+			return err
+		}
+	}
+
+	if scanner.Err() != nil {
+		return err
+	}
+
+	batchOut, err := os.Create(filepath.Join(tmpDir, fmt.Sprintf(outputBatchFileTemplate, outputBatchPrefix, batch)))
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = batchOut.Close()
+		logUnhandledErr(err)
+	}()
+
+	searches := sortUniqSearches(frequency)
+	for _, search := range searches {
+		_, err = batchOut.WriteString(fmt.Sprintf("%s\t%d\n", search.query, search.freq.count))
+		if err != nil {
+			return err
+		}
+	}
+
+	if batchIn == nil {
+		return nil
+	}
+
+	return countUniqueSearhes(tmpDir, filepath.Join(tmpDir, batchInName), batch+1, memLimit)
 }
 
 func mergeFiles(tmpDir string, outputFile string, n int) error {
@@ -54,7 +142,7 @@ func mergeFiles(tmpDir string, outputFile string, n int) error {
 
 		defer func(i int) {
 			err = batchFiles[i].Close()
-			checkErr(err)
+			logUnhandledErr(err)
 		}(i)
 	}
 
@@ -64,7 +152,7 @@ func mergeFiles(tmpDir string, outputFile string, n int) error {
 	}
 	defer func() {
 		err = out.Close()
-		checkErr(err)
+		logUnhandledErr(err)
 	}()
 
 	pq := make(PriorityQueue, 0)
@@ -107,87 +195,4 @@ func mergeFiles(tmpDir string, outputFile string, n int) error {
 	}
 
 	return nil
-}
-
-func createInitialRuns(tmpDir string, inputFile string, batch, memLimit int) error {
-	input, err := os.Open(inputFile)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		err = input.Close()
-		checkErr(err)
-	}()
-
-	scanner := bufio.NewScanner(input)
-	scanner.Split(bufio.ScanLines)
-
-	var query string
-	var rows int
-
-	frequency := make(map[string]*freq, memLimit)
-	var batchIn *os.File
-	for scanner.Scan() {
-		query = strings.TrimSpace(scanner.Text())
-
-		rows++
-
-		_, ok := frequency[query]
-		if !ok && len(frequency) < memLimit {
-			frequency[query] = &freq{1, rows}
-
-			continue
-		}
-
-		if ok {
-			frequency[query].count++
-
-			continue
-		}
-
-		if batchIn == nil {
-			batchIn, err = os.Create(filepath.Join(tmpDir, fmt.Sprintf("%s-%d.txt", inputBatchPrefix, batch)))
-			if err != nil {
-				return err
-			}
-
-			defer func() {
-				err = batchIn.Close()
-				checkErr(err)
-			}()
-		}
-
-		if _, err = batchIn.Write(append([]byte(query), '\n')); err != nil {
-			return err
-		}
-	}
-
-	if scanner.Err() != nil {
-		return err
-	}
-
-	batchOut, err := os.Create(filepath.Join(tmpDir, fmt.Sprintf("%s-%d.tsv", outputBatchPrefix, batch)))
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		err = batchOut.Close()
-		checkErr(err)
-	}()
-
-	searches := sortUniqSearches(frequency)
-	for _, search := range searches {
-		_, err = batchOut.WriteString(fmt.Sprintf("%s\t%d\n", search.query, search.freq.count))
-		if err != nil {
-			return err
-		}
-	}
-
-	if batchIn == nil {
-		return nil
-	}
-
-	return createInitialRuns(tmpDir, filepath.Join(tempDir, fmt.Sprintf("%s-%d.txt", inputBatchPrefix, batch)), batch+1, memLimit)
 }
