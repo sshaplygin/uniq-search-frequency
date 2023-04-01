@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"path/filepath"
 	"runtime/debug"
 	"time"
 
@@ -36,8 +37,8 @@ func main() {
 		return
 	}
 
-	inputFile := pointer.GetString(inputFlag)
-	outputFile := pointer.GetString(outputFlag)
+	inputFile := filepath.Clean(pointer.GetString(inputFlag))
+	outputFile := filepath.Clean(pointer.GetString(outputFlag))
 
 	sortFunc := externalSort
 	if n == withoutMemoryLimit {

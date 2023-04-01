@@ -52,14 +52,20 @@ func mergeFiles(tmpDir string, outputFile string, n int) error {
 			return err
 		}
 
-		defer batchFiles[i].Close()
+		defer func(i int) {
+			err = batchFiles[i].Close()
+			checkErr(err)
+		}(i)
 	}
 
-	out, err := os.Create(outputFile)
+	out, err := os.Create(filepath.Clean(outputFile))
 	if err != nil {
 		return err
 	}
-	defer out.Close()
+	defer func() {
+		err = out.Close()
+		checkErr(err)
+	}()
 
 	pq := make(PriorityQueue, 0)
 	heap.Init(&pq)
@@ -146,10 +152,15 @@ func createInitialRuns(tmpDir string, inputFile string, batch, memLimit int) err
 				return err
 			}
 
-			defer batchIn.Close()
+			defer func() {
+				err = batchIn.Close()
+				checkErr(err)
+			}()
 		}
 
-		batchIn.Write(append([]byte(query), '\n'))
+		if _, err = batchIn.Write(append([]byte(query), '\n')); err != nil {
+			return err
+		}
 	}
 
 	if scanner.Err() != nil {
