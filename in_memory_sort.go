@@ -11,15 +11,12 @@ import (
 func inMemorySort(inputFile, outputFile string, _ int) error {
 	file, err := os.Open(inputFile)
 	if err != nil {
-		log.Println("open input file", err)
-
-		return err
+		return fmt.Errorf("open input file: %w", err)
 	}
 
 	defer func() {
-		if err = file.Close(); err != nil {
-			log.Println("close input file", err)
-		}
+		err = file.Close()
+		logUnhandledErr(err)
 	}()
 
 	scanner := bufio.NewScanner(file)
@@ -28,12 +25,8 @@ func inMemorySort(inputFile, outputFile string, _ int) error {
 	countRows, searchFreq := countSearchQueriesFreq(scanner)
 
 	if scanner.Err() != nil {
-		log.Println("scanner after read", err)
-
-		return err
+		return fmt.Errorf("scanner after read: %w", err)
 	}
-
-	log.Println("data was read from input file", inputFile)
 
 	log.Println("processed queries:", countRows)
 	log.Println("unique queries:", len(searchFreq))
@@ -42,22 +35,18 @@ func inMemorySort(inputFile, outputFile string, _ int) error {
 
 	f, err := os.Create(outputFile)
 	if err != nil {
-		log.Println("create output file", err)
-
-		return err
+		return fmt.Errorf("create output file: %w", err)
 	}
 
 	defer func() {
 		err = f.Close()
-		checkErr(err)
+		logUnhandledErr(err)
 	}()
 
 	for i := 0; i < len(uniqSearches); i++ {
 		_, err = f.WriteString(fmt.Sprintf("%s\t%d\n", uniqSearches[i].query, uniqSearches[i].freq.count))
 		if err != nil {
-			log.Println("write data to output", err)
-
-			return err
+			return fmt.Errorf("write data to output: %w", err)
 		}
 	}
 

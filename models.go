@@ -2,6 +2,8 @@ package main
 
 import "container/heap"
 
+const outputTemplate = "%s\t%d"
+
 var _ heap.Interface = (*PriorityQueue)(nil)
 
 type Item struct {

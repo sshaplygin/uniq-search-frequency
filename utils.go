@@ -5,7 +5,7 @@ import (
 	"sort"
 )
 
-func checkErr(err error) {
+func logUnhandledErr(err error) {
 	if err != nil {
 		log.Println(err)
 	}
