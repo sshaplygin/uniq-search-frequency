@@ -179,7 +179,10 @@ func createInitialRuns(tmpDir string, inputFile string, batch, memLimit int) err
 
 	searches := sortUniqSearches(frequency)
 	for _, search := range searches {
-		batchOut.WriteString(fmt.Sprintf("%s\t%d\n", search.query, search.freq.count))
+		_, err = batchOut.WriteString(fmt.Sprintf("%s\t%d\n", search.query, search.freq.count))
+		if err != nil {
+			return err
+		}
 	}
 
 	if batchIn == nil {
