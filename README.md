@@ -54,12 +54,15 @@ Run individual tasks when needed:
 ```bash
 make test
 make coverage
+make benchmark
 make lint
 make vet
 make staticcheck
 make format
 make generate
 ```
+
+Benchmark methodology and a comparison with the previous external-sort algorithm are in [docs/benchmark-comparison.md](docs/benchmark-comparison.md).
 
 ## Links
 

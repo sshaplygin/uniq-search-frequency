@@ -2,7 +2,7 @@ GO ?= go
 GOLANGCI_LINT ?= golangci-lint
 STATICCHECK ?= staticcheck
 
-.PHONY: build run test coverage generate format format-check tidy verify lint vet staticcheck check info clean
+.PHONY: build run test coverage benchmark generate format format-check tidy verify lint vet staticcheck check info clean
 
 build:
 	$(GO) build ./...
@@ -16,6 +16,9 @@ test:
 
 coverage:
 	$(GO) test -cover -count=1 ./...
+
+benchmark:
+	$(GO) test -run '^$$' -bench '^BenchmarkExternalSort$$' -benchmem -count=5 ./...
 
 generate:
 	$(GO) generate ./...
