@@ -27,7 +27,7 @@ format:
 	$(GO) fmt ./...
 
 format-check:
-	@unformatted="$$(gofmt -s -l *.go)"; \
+	@unformatted="$$(gofmt -l *.go)"; \
 	if [ -n "$$unformatted" ]; then \
 		echo "Run 'make format' for:"; \
 		echo "$$unformatted"; \
