@@ -1,59 +1,25 @@
 package main
 
 import (
+	"reflect"
+	"strings"
 	"testing"
-
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
 )
 
-type Suite struct {
-	suite.Suite
-	ctl *gomock.Controller
-
-	scanner *MockTextScanner
-}
-
-func (s *Suite) SetupTest() {
-	s.ctl = gomock.NewController(s.T())
-
-	s.scanner = NewMockTextScanner(s.ctl)
-}
-
-func (s *Suite) TeardownTest() {
-	s.ctl.Finish()
-}
-
-func TestSuite(t *testing.T) {
-	suite.Run(t, new(Suite))
-}
-
-func Test_emptyTextScanner(t *testing.T) {
-	count, freq := countSearchQueriesFreq(nil)
-
-	assert.Equal(t, 0, count)
-	assert.Len(t, freq, 0)
-}
-
-func (s *Suite) Test_countSearchQueriesFreq() {
-	s.scanner.EXPECT().Scan().Return(true).Times(3)
-	s.scanner.EXPECT().Scan().Return(false).Times(1)
-
-	s.scanner.EXPECT().Text().Return("new").Times(1)
-	s.scanner.EXPECT().Text().Return("test").Times(2)
-
-	expFreq := map[string]*freq{
-		"test": {
-			2, 2,
-		},
-		"new": {
-			1, 1,
-		},
+func TestCountSearchQueriesFreq(t *testing.T) {
+	count, frequency, err := countSearchQueriesFreq(strings.NewReader("new\ntest\ntest\n"))
+	if err != nil {
+		t.Fatalf("count queries: %v", err)
 	}
 
-	count, freq := countSearchQueriesFreq(s.scanner)
-
-	assert.Equal(s.T(), 3, count)
-	assert.Equal(s.T(), expFreq, freq)
+	expected := map[string]freq{
+		"new":  {count: 1, pos: 1},
+		"test": {count: 2, pos: 2},
+	}
+	if count != 3 {
+		t.Errorf("count = %d, want 3", count)
+	}
+	if !reflect.DeepEqual(frequency, expected) {
+		t.Errorf("frequency = %#v, want %#v", frequency, expected)
+	}
 }

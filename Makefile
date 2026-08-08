@@ -6,3 +6,7 @@ test:
 .PHONY: generate
 generate:
 	go generate ./...
+
+.PHONY: lint
+lint:
+	golangci-lint run ./...
