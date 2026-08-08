@@ -2,55 +2,59 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
+	"os"
 	"path/filepath"
-	"runtime/debug"
 	"time"
-
-	"github.com/AlekSi/pointer"
 )
 
-const withoutMemoryLimit = -1
+const (
+	withoutMemoryLimit = -1
+	defaultInputFile   = "data/input.txt"
+	defaultOutputFile  = "data/output.tsv"
+)
 
 var (
-	inputFlag  = flag.String("input", "input.txt", "Set input filename. Defaul value: input.txt Example: --input=inuput.txt")
-	outputFlag = flag.String("output", "output.tsv", "Set output filename. Default value: output.tsv Example: --output=output.tsv")
-	nFlag      = flag.Int("n", withoutMemoryLimit, "Set memory limit for uniques search queries. Defaul value: -1 - without limit. Example: --n=3")
+	inputFlag  = flag.String("input", defaultInputFile, "Set input filename. Default value: data/input.txt. Example: --input=custom-input.txt")
+	outputFlag = flag.String("output", defaultOutputFile, "Set output filename. Default value: data/output.tsv. Example: --output=custom-output.tsv")
+	nFlag      = flag.Int("n", withoutMemoryLimit, "Set memory limit for unique search queries. Default value: -1 (without limit). Example: --n=3")
 )
 
 func main() {
-	now := time.Now()
-	defer log.Println("execution time:", time.Since(now))
-
-	defer func() {
-		if panicErr := recover(); panicErr != nil {
-			log.Printf("recover panic: %+v\n%s\n", panicErr, debug.Stack())
-		}
-	}()
-
+	startedAt := time.Now()
 	flag.Parse()
 
-	n := pointer.GetInt(nFlag)
-	if n == 0 || n < withoutMemoryLimit {
-		log.Println("input unique search limit is unsupported")
-
-		return
+	err := run(*inputFlag, *outputFlag, *nFlag)
+	if err != nil {
+		log.Println("sort result:", err)
+		log.Println("execution time:", time.Since(startedAt))
+		os.Exit(1)
 	}
 
-	inputFile := filepath.Clean(pointer.GetString(inputFlag))
-	outputFile := filepath.Clean(pointer.GetString(outputFlag))
+	log.Println("data was written to output file:", filepath.Clean(*outputFlag))
+	log.Println("execution time:", time.Since(startedAt))
+}
+
+func run(inputFile, outputFile string, n int) error {
+	if n == 0 || n < withoutMemoryLimit {
+		return fmt.Errorf("input unique search limit is unsupported")
+	}
+
+	if inputFile == "" {
+		return fmt.Errorf("input filename is required")
+	}
+	if outputFile == "" {
+		return fmt.Errorf("output filename is required")
+	}
+
+	inputFile = filepath.Clean(inputFile)
+	outputFile = filepath.Clean(outputFile)
 
 	sortFunc := externalSort
 	if n == withoutMemoryLimit {
 		sortFunc = inMemorySort
 	}
 
-	err := sortFunc(inputFile, outputFile, n)
-	if err != nil {
-		log.Println("sort result:", err)
-
-		return
-	}
-
-	log.Println("data was written to output file:", outputFile)
+	return sortFunc(inputFile, outputFile, n)
 }

@@ -1,30 +1,70 @@
 # uniq-search-frequency
 
-This is the CLI for `task.txt`. The test task is written in the format .txt in Russian.
+CLI implementation of the task described in `task.txt`.
+
+The output is ordered by descending frequency. Queries with the same frequency retain the order of their first appearance in the input.
 
 ## Usage
 
-Step 1. Without build binary file: `go run ./`
+Run without building a binary:
+
+```bash
+make run
+```
 
 or
 
-Step 1. Build app to binary. `go build -o ./bin/cli` \
-Step 2. Run cli `./bin/cli`
+Verify that the project builds:
+
+```bash
+make build
+```
 
 ## Flags
 
 CLI support next flags:
 
-- n - memory limit for first uniques search queries. `default value = -1`
-- input - input filepath `default = input.txt`
-- output - output filepath `default = output.tsv`
-- h - print helps about supported cli flags
+- `n` — maximum number of unique queries aggregated in memory. The default `-1` processes the whole input in memory.
+- `input` — input file path. Default: `data/input.txt`.
+- `output` — output file path. Default: `data/output.tsv`.
+- `h` — print flag help.
 
 Example:
 
 ```bash
-    cli --n=3 --input=test.txt --output=test1.tsv
+make run ARGS="--n=3 --input=test.txt --output=test1.tsv"
 ```
+
+The sample input and output files are in [`data/`](data/). Running `make run` without arguments reads `data/input.txt` and replaces `data/output.tsv`.
+
+With a positive `--n`, the utility creates sorted temporary runs, merges and aggregates them with a bounded number of open files, then performs a second external sort by frequency. This lets it process more unique queries than the memory limit without recursive reprocessing of the entire input.
+
+Output is tab-separated. Queries containing tabs or quotes are encoded using CSV-compatible quoting with a tab delimiter, so they remain round-trippable.
+
+The command returns a non-zero exit code on invalid flags or I/O failures. The destination file is written atomically: a failed run leaves an existing output file unchanged.
+
+## Development
+
+The Makefile is the entry point for all development commands. Run the complete validation suite:
+
+```bash
+make check
+```
+
+Run individual tasks when needed:
+
+```bash
+make test
+make coverage
+make benchmark
+make lint
+make vet
+make staticcheck
+make format
+make generate
+```
+
+Benchmark methodology and a comparison with the previous external-sort algorithm are in [docs/benchmark-comparison.md](docs/benchmark-comparison.md).
 
 ## Links
 
