@@ -9,12 +9,16 @@ import (
 	"time"
 )
 
-const withoutMemoryLimit = -1
+const (
+	withoutMemoryLimit = -1
+	defaultInputFile   = "data/input.txt"
+	defaultOutputFile  = "data/output.tsv"
+)
 
 var (
-	inputFlag  = flag.String("input", "input.txt", "Set input filename. Defaul value: input.txt Example: --input=inuput.txt")
-	outputFlag = flag.String("output", "output.tsv", "Set output filename. Default value: output.tsv Example: --output=output.tsv")
-	nFlag      = flag.Int("n", withoutMemoryLimit, "Set memory limit for uniques search queries. Defaul value: -1 - without limit. Example: --n=3")
+	inputFlag  = flag.String("input", defaultInputFile, "Set input filename. Default value: data/input.txt. Example: --input=custom-input.txt")
+	outputFlag = flag.String("output", defaultOutputFile, "Set output filename. Default value: data/output.tsv. Example: --output=custom-output.tsv")
+	nFlag      = flag.Int("n", withoutMemoryLimit, "Set memory limit for unique search queries. Default value: -1 (without limit). Example: --n=3")
 )
 
 func main() {

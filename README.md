@@ -25,8 +25,8 @@ make build
 CLI support next flags:
 
 - `n` — maximum number of unique queries aggregated in memory. The default `-1` processes the whole input in memory.
-- `input` — input file path. Default: `input.txt`.
-- `output` — output file path. Default: `output.tsv`.
+- `input` — input file path. Default: `data/input.txt`.
+- `output` — output file path. Default: `data/output.tsv`.
 - `h` — print flag help.
 
 Example:
@@ -34,6 +34,8 @@ Example:
 ```bash
 make run ARGS="--n=3 --input=test.txt --output=test1.tsv"
 ```
+
+The sample input and output files are in [`data/`](data/). Running `make run` without arguments reads `data/input.txt` and replaces `data/output.tsv`.
 
 With a positive `--n`, the utility creates sorted temporary runs, merges and aggregates them with a bounded number of open files, then performs a second external sort by frequency. This lets it process more unique queries than the memory limit without recursive reprocessing of the entire input.
 

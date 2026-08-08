@@ -27,8 +27,12 @@ format:
 	$(GO) fmt ./...
 
 format-check:
-	$(GO) fmt ./...
-	git diff --exit-code -- '*.go'
+	@unformatted="$$(gofmt -s -l *.go)"; \
+	if [ -n "$$unformatted" ]; then \
+		echo "Run 'make format' for:"; \
+		echo "$$unformatted"; \
+		exit 1; \
+	fi
 
 tidy:
 	$(GO) mod tidy
